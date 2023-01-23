@@ -21,9 +21,12 @@ from datetime import datetime
 import fnmatch
 import io
 import os
+from pathlib import PurePath
 import re
 import shutil
 import urllib.parse
+import glob
+import re
 
 from lxml import etree
 
@@ -74,10 +77,13 @@ def rearrange_archive(root):
             move_dir_contents_to_dir(src_data_path, data_path)
 
         # also copy the custom fonts
-        shutil.copy(os.path.join(path, 'DejaVuSansMonoCondensed60.ttf'),
-                    data_path)
-        shutil.copy(os.path.join(path, 'DejaVuSansMonoCondensed75.ttf'),
-                    data_path)
+        # shutil.copy(os.path.join(path, 'DejaVuSansMonoCondensed60.ttf'),
+        #             data_path)
+        # shutil.copy(os.path.join(path, 'DejaVuSansMonoCondensed75.ttf'),
+        #             data_path)
+        for src_ttf in glob.glob(os.path.join(path, '*.ttf')):
+            shutil.copy(src_ttf, data_path)
+
         # and the favicon
         shutil.copy(os.path.join(path, 'favicon.ico'), data_path)
 
@@ -374,6 +380,15 @@ def add_footer(html, root, fn):
         else:
             footer.remove(child)
 
+def change_path(html):
+    tags = html.xpath(r'''//*[@class='interwiki-zh']/a''')
+    if (len(tags) > 0):
+        lang_a = tags[0]
+        relative_path = re.sub(r'''.*cppreference.com/w/(.*)''', r'''\g<1>''', lang_a.get('href'))
+        if PurePath(relative_path).suffix == '':
+            relative_path += '.html'
+        zh_url = os.path.relpath(f"zh/{relative_path}", os.path.dirname(f"en/{relative_path}"))
+        lang_a.set('href', zh_url)
 
 # remove external links to unused resources
 def remove_unused_external(html):
@@ -391,13 +406,14 @@ def preprocess_html_file(root, fn, rename_map):
     output = io.StringIO()
 
     remove_unused_external(html)
-    remove_noprint(html, keep_footer=True)
+    # remove_noprint(html, keep_footer=True)
     remove_see_also(html)
     remove_google_analytics(html)
     remove_ads(html)
     remove_fileinfo(html)
 
-    add_footer(html, root, fn)
+    # add_footer(html, root, fn)
+    # change_path(html)
 
     # apply changes to links caused by file renames
     for el in html.xpath('//*[@src]'):
@@ -419,10 +435,11 @@ def preprocess_css_file(fn):
 
     # note that query string is not used in css files
 
-    text = text.replace('../DejaVuSansMonoCondensed60.ttf',
-                        'DejaVuSansMonoCondensed60.ttf')
-    text = text.replace('../DejaVuSansMonoCondensed75.ttf',
-                        'DejaVuSansMonoCondensed75.ttf')
+    # text = text.replace('../DejaVuSansMonoCondensed60.ttf',
+    #                     'DejaVuSansMonoCondensed60.ttf')
+    # text = text.replace('../DejaVuSansMonoCondensed75.ttf',
+    #                     'DejaVuSansMonoCondensed75.ttf')
+    text = re.sub(r'''\.\./([^'"]*\.ttf)''', r'''\g<1>''', text)
 
     text = text.replace('../../upload.cppreference.com/mwiki/images/',
                         'images/')

@@ -1,5 +1,5 @@
 
-body {
+/* body {
     background-color: white;
 }
 
@@ -49,4 +49,8 @@ pre,
 
 .t-dcl-member-nobold-div > div:first-child {
     font-family: "DejaVu Sans", arial, sans-serif;
+} */
+
+html {
+    font-variant-ligatures: no-common-ligatures;
 }
