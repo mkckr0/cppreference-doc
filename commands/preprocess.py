@@ -381,14 +381,22 @@ def add_footer(html, root, fn):
             footer.remove(child)
 
 def change_path(html):
-    tags = html.xpath(r'''//*[@class='interwiki-zh']/a''')
-    if (len(tags) > 0):
-        lang_a = tags[0]
-        relative_path = re.sub(r'''.*cppreference.com/w/(.*)''', r'''\g<1>''', lang_a.get('href'))
-        if PurePath(relative_path).suffix == '':
-            relative_path += '.html'
-        zh_url = os.path.relpath(f"zh/{relative_path}", os.path.dirname(f"en/{relative_path}"))
-        lang_a.set('href', zh_url)
+    lang_a = html.xpath(r'''//*[@class='interwiki-zh']/a''')[0]
+    relative_path = re.sub(r'''.*cppreference.com/w/(.*)''', r'''\g<1>''', lang_a.get('href'))
+    if PurePath(relative_path).suffix == '':
+        relative_path += '.html'
+    zh_url = os.path.relpath(f"zh/{relative_path}", os.path.dirname(f"en/{relative_path}"))
+    lang_a.set('href', zh_url)
+
+def add_origin_link(html, root, fn):
+    ul = html.xpath(r'''//*[@id='cpp-navigation']/ul''')[0]
+    link = etree.SubElement(etree.SubElement(ul, 'li'), 'a')
+    url = re.sub(r'(..)/(.*)\.html',
+                    r'https://\1.cppreference.com/w/\2',
+                    os.path.relpath(fn, root))
+    url = re.sub(r'(.*)/index', r'\1/', url)
+    link.set('href', url)
+    link.text = 'Origin version'
 
 # remove external links to unused resources
 def remove_unused_external(html):
@@ -414,6 +422,7 @@ def preprocess_html_file(root, fn, rename_map):
 
     # add_footer(html, root, fn)
     # change_path(html)
+    add_origin_link(html, root, fn)
 
     # apply changes to links caused by file renames
     for el in html.xpath('//*[@src]'):
