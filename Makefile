@@ -28,7 +28,7 @@ qhelpgenerator = qhelpgenerator
 
 #Version
 
-VERSION=20220730
+VERSION=`date +'%Y%m%d'`
 
 #STANDARD RULES
 
@@ -140,6 +140,14 @@ release: all
 	pushd "output"; \
 	tar c$(TAR_OPTION)f "../release/qch-book-$(VERSION).tar.$(TAR_FORMAT)" "cppreference-doc-en-cpp.qch"; \
 	zip -qr "../release/qch-book-$(VERSION).zip" "cppreference-doc-en-cpp.qch"; \
+	popd
+
+release_doc_html : clean doc_html
+	rm -rf release
+	mkdir -p release
+
+	pushd "output"; \
+	tar czf "../release/html-book-$(VERSION).tar.gz" "reference"; \
 	popd
 
 #WORKER RULES
