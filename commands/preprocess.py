@@ -403,7 +403,7 @@ def add_ttf_preload_link(html, root, fn):
 
     for src_ttf in glob.glob(os.path.join(root, 'common/*.ttf')):
         url = os.path.relpath(src_ttf, PurePath(fn).parent)
-        link = etree.fromstring(f"""<link rel="preload" href="{url}" as="font" type="font/ttf"/>""")
+        link = etree.fromstring(f"""<link rel="preload" href="{url}" as="font" type="font/ttf" crossorigin="anonymous" />""")
         head.insert(0, link)
 
 # remove external links to unused resources
