@@ -389,7 +389,7 @@ def change_path(html):
     lang_a.set('href', zh_url)
 
 def add_origin_link(html, root, fn):
-    ul = html.xpath(r'''//*[@id='cpp-navigation']/ul''')[0]
+    ul = html.find(r'''//*[@id='cpp-navigation']/ul''')
     link = etree.SubElement(etree.SubElement(ul, 'li'), 'a')
     url = re.sub(r'(..)/(.*)\.html',
                     r'https://\1.cppreference.com/w/\2',
@@ -397,6 +397,14 @@ def add_origin_link(html, root, fn):
     url = re.sub(r'(.*)/index', r'\1/', url)
     link.set('href', url)
     link.text = 'Origin version'
+
+def add_ttf_preload_link(html, root, fn):
+    head = html.find(r'''//head''')
+
+    for src_ttf in glob.glob(os.path.join(root, 'common/*.ttf')):
+        url = os.path.relpath(src_ttf, PurePath(fn).parent)
+        link = etree.fromstring(f"""<link rel="preload" href="{url}" as="font" type="font/ttf"/>""")
+        head.insert(0, link)
 
 # remove external links to unused resources
 def remove_unused_external(html):
@@ -423,6 +431,7 @@ def preprocess_html_file(root, fn, rename_map):
     # add_footer(html, root, fn)
     # change_path(html)
     add_origin_link(html, root, fn)
+    add_ttf_preload_link(html, root, fn)
 
     # apply changes to links caused by file renames
     for el in html.xpath('//*[@src]'):
